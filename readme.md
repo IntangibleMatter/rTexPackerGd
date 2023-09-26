@@ -1,0 +1,19 @@
+# rTexPacker Importer for Godot
+
+This is just a simple plugin that lets you import rTexPacker sheets in Godot.
+
+## Functionality:
+
+- [x] Importing sheets as `AtlasTextures`
+- [x] Importing `.rtpa`, and `.rtpb` files
+- [ ] Importing JSON
+- [ ] Importing XML
+
+The JSON and XML importers have been written, but there remain some issues to
+be resolved with how the files get treated.
+
+## Use
+
+Just output the rTexturePacker data and sheets wherever you want them in the
+project, and watch as they get exported to a subfolder of the folder you
+placed the file in, named after the file that was imported.
