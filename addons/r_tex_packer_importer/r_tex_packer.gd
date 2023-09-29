@@ -5,16 +5,23 @@ var import_plugin : EditorImportPlugin
 
 func _enter_tree() -> void:
 	var settings := get_editor_interface().get_editor_settings()
-	settings.set("r_tex_packer/output_path", "res://assets/graphics/")
-	var property_info := {
-		"name": "r_tex_packer/output_path",
-		"type": TYPE_STRING,
-		"hint": PROPERTY_HINT_DIR,
-		"hint_string": "The location that all the texture atlases will be exported to."
+	settings.set("r_tex_packer/import_xml", false)
+	var property_info_xml := {
+		"name": "r_tex_packer/import_xml",
+		"type": TYPE_BOOL,
+		"hint": PROPERTY_HINT_NONE,
+		"hint_string": "Enables importing XML files. Disabled by default to avoid conflicts."
 	}
-	settings.add_property_info(property_info)
+	settings.set("r_tex_packer/import_json", false)
+	var property_info_json := {
+		"name": "r_tex_packer/import_json",
+		"type": TYPE_BOOL,
+		"hint": PROPERTY_HINT_NONE,
+		"hint_string": "Enables importing JSON files. Disabled by default to avoid conflicts."
+	}
+	settings.add_property_info(property_info_xml)
+	settings.add_property_info(property_info_json)
 	
-	import_plugin = preload("res://addons/r_texture_packer_importer/r_tex_import.gd").new()
 	add_import_plugin(import_plugin)
 
 

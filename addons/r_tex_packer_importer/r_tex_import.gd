@@ -20,9 +20,12 @@ func _get_import_order() -> int:
 
 
 func _get_recognized_extensions() -> PackedStringArray:
-	return ["rtpa", "rtpb"]
-#	return ["rtpa", "rptb", "json", "xml"]
-
+	var valid : PackedStringArray = ["rtpa", "rtpb"]
+	if ProjectSettings.get_setting("r_tex_packer/import_xml"):
+		valid.append("xml")
+	if ProjectSettings.get_setting("r_tex_packer/import_json"):
+		valid.append("json")
+	return valid
 
 func _get_save_extension() -> String:
 	return "tres"
