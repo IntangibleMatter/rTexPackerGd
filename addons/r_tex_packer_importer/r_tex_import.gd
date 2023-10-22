@@ -81,9 +81,9 @@ func _import(source_file: String, save_path: String, options: Dictionary, platfo
 	
 	if not tex == {}:
 		for tx in tex:
-			var img_path :="{0}/{1}.{2}".format([source_file.get_base_dir() + source_file.get_base_name(), tx, _get_save_extension()])
-			if not DirAccess.dir_exists(source_file.get_base_dir() + source_file.get_base_name()):
-				DirAccess.make_dir_recursive(source_file.get_base_dir() + source_file.get_base_name())
+			var img_path :="{0}/{1}.{2}".format([source_file.get_base_dir() + source_file.get_basename(), tx, _get_save_extension()])
+			if not DirAccess.dir_exists_absolute(source_file.get_base_dir() + source_file.get_basename()):
+				DirAccess.make_dir_recursive_absolute(source_file.get_base_dir() + source_file.get_basename())
 			ResourceSaver.save(tex[tx], img_path, 68)
 			gen_files.push_back(img_path)
 	else:
