@@ -11,11 +11,16 @@ config_version=5
 [application]
 
 config/name="rTexturePackerGd"
-config/features=PackedStringArray("4.1", "GL Compatibility")
+config/features=PackedStringArray("4.2", "GL Compatibility")
 
 [editor_plugins]
 
-enabled=PackedStringArray()
+enabled=PackedStringArray("res://addons/r_tex_packer_importer/plugin.cfg")
+
+[r_tex_packer]
+
+import_xml=false
+import_json=false
 
 [rendering]
 

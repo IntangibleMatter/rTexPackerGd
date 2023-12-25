@@ -56,7 +56,7 @@ func _get_option_visibility(_path: String, _option_name: StringName, _options: D
 
 
 func _import(source_file: String, save_path: String, options: Dictionary, platform_variants: Array[String], gen_files: Array[String]) -> Error:
-	print("OPENGING")
+	#prints("OPENING", source_file)
 	var file := FileAccess.open(source_file, FileAccess.READ)
 	if file == null:
 		push_error("Couldn't import file %s" % source_file)
@@ -64,8 +64,8 @@ func _import(source_file: String, save_path: String, options: Dictionary, platfo
 	if options.image == "":
 		print(source_file)
 #		options.image = source_file.replace(".json", ".png").replace(".xml", ".png").replace(".rtpa", ".png").replace(".rtpb", ".png")
-		print("Bepis")
-	
+		print("No image found for the source file. Will attempt to use default.")
+
 	var tex : Dictionary
 	print(source_file)
 	match source_file.split(".")[-1]:
@@ -73,23 +73,24 @@ func _import(source_file: String, save_path: String, options: Dictionary, platfo
 			tex = import_rtpa(file, options, source_file)
 		"rtpb":
 			tex = import_rtpb(file, options, source_file)
-			print("rtpb")
+			#print("rtpb")
 		"json":
 			tex = import_json(file, options)
 		"xml":
 			tex = import_xml(file, options)
-	
+
 	if not tex == {}:
 		for tx in tex:
-			var img_path :="{0}/{1}.{2}".format([source_file.get_base_dir() + source_file.get_basename(), tx, _get_save_extension()])
-			if not DirAccess.dir_exists_absolute(source_file.get_base_dir() + source_file.get_basename()):
-				DirAccess.make_dir_recursive_absolute(source_file.get_base_dir() + source_file.get_basename())
+			var img_path :="{0}/{1}.{2}".format([source_file.get_basename(), tx, _get_save_extension()])
+			prints("img", img_path)
+			if not DirAccess.dir_exists_absolute(source_file.get_basename() + "/" + tx):
+				DirAccess.make_dir_recursive_absolute(source_file.get_basename() + "/" + tx)
 			ResourceSaver.save(tex[tx], img_path, 68)
 			gen_files.push_back(img_path)
 	else:
 		push_error("Import failed")
 		return FAILED
-	
+
 	return OK
 
 
@@ -102,32 +103,38 @@ func import_rtpa(file: FileAccess, opt: Dictionary, source_file: String) -> Dict
 #	else:
 #		img = load(source_file.replace(".rtpa", ".png").replace(".rtpb", ".png"))
 #		print("jkhasdgjahsgdkj")
-	
+
 	for tex in items:
 		if tex.begins_with("#"):
 			continue
 		var atlas := AtlasTexture.new()
-		
+
 		var spr := tex.split(" ")
-		var spr_f := PackedInt32Array(Array(spr.slice(2)))
+		var spr_f : PackedInt32Array
 		if spr[0] == "a":
+			spr_f = PackedInt32Array(Array(spr.slice(-5)))
 			if spr_f[3] == 1:
 				push_error("Error: rTexPackerGd can't import font files.")
 				return data
 			if not opt.image:
 				img = load(source_file.get_base_dir() + "/" + spr[1])
+				if not is_instance_valid(img):
+					push_error("Attempted to load \" " + source_file.get_base_dir() + "/" + spr[1] + ". As image. Failed, doesn't exist.")
+					return data
 				print("loaded " + source_file.get_base_dir() + "/" + spr[1])
 		atlas.atlas = img
 		# Sprite info:   s <nameId> <originX> <originY> <positionX> <positionY> <sourceWidth> <sourceHeight> <padding> <trimmed> <trimRecX> <trimRecY> <trimRecWidth> <trimRecHeight>
 		if spr[0] == "s":
+			spr_f = PackedInt32Array(Array(spr.slice(-12)))
+			#print(spr_f)
 			if spr_f[7] == 1: # trimmed
 				atlas.region = Rect2i(spr_f[8], spr_f[9], spr_f[10] + spr_f[6], spr_f[11] + spr_f[6])
 			else:
 				atlas.region = Rect2i(spr_f[2], spr_f[3], spr_f[4] + spr_f[6], spr_f[5] + spr_f[6])
-			
-		
-			data[spr[1]] = atlas
-		
+
+
+			data[" ".join(spr.slice(1, -12))] = atlas
+
 	return data
 
 
@@ -198,7 +205,7 @@ func import_rtpb(file: FileAccess, opt: Dictionary, source_file: String) -> Dict
 	if bytes.decode_s32(16) == 1:
 		push_error("Error: rTexPackerGd can't import font files.")
 		return data
-	
+
 	var spr_count := bytes.decode_s32(8)
 	var imgs : Array[PackedByteArray]
 
@@ -209,26 +216,26 @@ func import_rtpb(file: FileAccess, opt: Dictionary, source_file: String) -> Dict
 		atlas.atlas = img
 
 		var name := im.slice(0, 129).get_string_from_utf8()
-		
+
 		var ints : PackedInt32Array
-		
+
 		for j in 12:
 			ints.append(im.decode_u32(128 + j * 4))
-		
-		
+
+
 		if ints[7] == 1:
 			atlas.region = Rect2i(ints[8], ints[9], ints[10] + ints[6], ints[11] + ints[6])
 		else:
 			atlas.region = Rect2i(ints[2], ints[3], ints[4] + ints[6], ints[5] + ints[6])
-		
+
 		data[name] = atlas
-	
+
 	return data
 
 func import_json(file: FileAccess, opt: Dictionary) -> Dictionary:
 	var data : Dictionary
 	var img : Texture2D #= load(opt.image)
-	
+
 	var json := JSON.new()
 	var j_data : Dictionary
 	if json.parse(file.get_as_text()) == OK:
@@ -243,7 +250,7 @@ func import_json(file: FileAccess, opt: Dictionary) -> Dictionary:
 	if j_data.atlas.isFont:
 		push_error("Error: rTexPackerGd can't import font files.")
 		return data
-	
+
 	for spr in j_data.sprites:
 		var atlas := AtlasTexture.new()
 		atlas.atlas = img
@@ -251,9 +258,9 @@ func import_json(file: FileAccess, opt: Dictionary) -> Dictionary:
 			atlas.region = Rect2i(spr.trimRec.x, spr.trimRec.y, spr.trimRec.width + spr.padding, spr.trimRec.height + spr.padding)
 		else:
 			atlas.region = Rect2i(spr.position.x, spr.position.y, spr.sourceSize.width + spr.padding, spr.sourceSize.height + spr.padding)
-		
+
 		data[spr.nameId] = atlas
-	
+
 	return data
 
 
@@ -265,13 +272,13 @@ func import_xml(file: FileAccess, opt: Dictionary) -> Dictionary:
 		return data
 	while not xml.get_node_name() == "AtlasTexture":
 		xml.read()
-	
+
 	while not xml.get_node_type() == XMLParser.NODE_ELEMENT_END:
 		xml.read()
 		if xml.get_node_name() == "Sprite":
 			var atlas := AtlasTexture.new()
 			atlas.atlas = img
-			
+
 			if xml.get_named_attribute_value("trimmed") == "1":
 				atlas.region = Rect2i(
 					int(xml.get_named_attribute_value("trimRecX")), int(xml.get_named_attribute_value("trimRecY")),
@@ -284,9 +291,9 @@ func import_xml(file: FileAccess, opt: Dictionary) -> Dictionary:
 					int(xml.get_named_attribute_value("sourceWidth")) + int(xml.get_named_attribute_value("padding")),
 					int(xml.get_named_attribute_value("sourceHeight")) + int(xml.get_named_attribute_value("padding"))
 				)
-			
-			
+
+
 			data[xml.get_named_attribute_value("nameId")] = atlas
 #		data[tex] = AtlasTexture.new()
-	
+
 	return data
