@@ -20,8 +20,8 @@ func _enter_tree() -> void:
 			"hint_string": "Enables importing JSON files. Disabled by default to avoid conflicts."
 		}
 		ProjectSettings.add_property_info(property_info_json)
-	
-	import_plugin = preload("res://addons/r_tex_packer_importer/r_tex_import.gd").new()
+
+	import_plugin = preload("./r_tex_import.gd").new()
 	add_import_plugin(import_plugin)
 
 
